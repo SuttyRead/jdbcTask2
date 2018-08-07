@@ -1,0 +1,103 @@
+<project name="JdbcTask" basedir="." default="all">
+
+    <!-- define names of directories -->
+    <property name="src" location="src"/>
+    <property name="build" location="build"/>
+    <property name="classes" location="${build}/classes"/>
+    <property name="lib.dir" location="${basedir}/lib"/>
+
+    <property name="src.dir" location="."/>
+    <property name="src.java.dir" location="${src.dir}/src"/>
+    <property name="src.test.dir" location="${src.dir}/test"/>
+
+    <property name="target.dir" location="build"/>
+    <property name="target.classes.java.dir" location="${target.dir}/classes"/>
+    <property name="target.classes.test.dir" location="${target.dir}/test/classes"/>
+
+    <property name="target.report.dir" location="${basedir}/report"/>
+
+    <!-- define all targets -->
+    <target name="all" depends="jar">
+        <java classname="Main" classpath="${classes}" fork="true"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete dir="${target.report.dir}"/>
+    </target>
+
+    <target name="jar" depends="report">
+        <jar destfile="${build}/Main.jar" basedir="${classes}" excludes="*Test.class">
+            <manifest>
+                <attribute name="Main-Class" value="Main"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <path id="run.classpath">
+        <pathelement location="${target.classes.java.dir}"/>
+        <pathelement location="${target.classes.test.dir}"/>
+        <fileset dir="${lib.dir}/">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compile.java">
+        <mkdir dir="${target.classes.java.dir}"/>
+        <javac destdir="${target.classes.java.dir}" includeantruntime="false" classpathref="run.classpath">
+            <src path="${src.java.dir}"/>
+        </javac>
+    </target>
+
+    <target name="compile.test" depends="compile.java">
+        <mkdir dir="${target.classes.test.dir}"/>
+        <javac destdir="${target.classes.test.dir}" includeantruntime="false" classpathref="run.classpath">
+            <src path="${src.test.dir}"/>
+            <classpath>
+                <pathelement location="${target.classes.java.dir}"/>
+                <pathelement path="lib/junit-4.10.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="compile" depends="clean,compile.java,compile.test"/>
+
+    <target name="test" depends="compile">
+        <mkdir dir="${target.report.dir}"/>
+
+        <junit printsummary="yes" haltonerror="yes" haltonfailure="no">
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${target.report.dir}">
+                <fileset dir="${src.test.dir}">
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/Test*All.java"/>
+                </fileset>
+            </batchtest>
+            <classpath>
+                <pathelement location="${basedir}/resources"/>
+                <pathelement location="${target.classes.java.dir}"/>
+                <pathelement location="${target.classes.test.dir}"/>
+                <pathelement path="lib/junit-4.12.jar"/>
+                <pathelement path="lib/dbunit-2.4.8.jar"/>
+                <pathelement path="lib/hamcrest-core-1.3.jar"/>
+                <pathelement path="lib/commons-dbcp2-2.0.1.jar"/>
+                <pathelement path="lib/commons-logging-1.1.3.jar"/>
+                <pathelement path="lib/commons-pool2-2.2.jar"/>
+                <pathelement path="lib/h2-1.4.197.jar"/>
+                <pathelement path="lib/slf4j-api-1.7.25.jar"/>
+            </classpath>
+        </junit>
+    </target>
+
+    <target name="report" depends="test">
+        <mkdir dir="${target.report.dir}/html"/>
+        <junitreport todir="${target.report.dir}">
+            <fileset dir="${target.report.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report todir="${target.report.dir}/html"/>
+        </junitreport>
+    </target>
+
+</project>

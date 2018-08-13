@@ -18,12 +18,14 @@ import java.sql.Date;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class JdbcUserDaoTest {
 
     private static final String SQL_SCHEMA = "resources/schema.sql";
     private static final String SQL_DATASET = "resources/dataset.xml";
     private static final String SQL_DATABASE = "test";
+    private static IDatabaseTester databaseTester = null;
 
     @BeforeClass
     public static void createSchema() throws Exception {
@@ -50,92 +52,82 @@ public class JdbcUserDaoTest {
         String user = resourceBundle.getString("jdbc.username");
         String password = resourceBundle.getString("jdbc.password");
         String driver = resourceBundle.getString("jdbc.driver-class-name");
-        IDatabaseTester databaseTester = new JdbcDatabaseTester(driver, url, user, password);
+        databaseTester = new JdbcDatabaseTester(driver, url, user, password);
         databaseTester.setSetUpOperation(DatabaseOperation.CLEAN_INSERT);
         databaseTester.setDataSet(dataSet);
         databaseTester.onSetup();
     }
 
     @Test
-    public void testCreate() throws IllegalAccessException, InstantiationException {
+    public void testCreate() throws Exception {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
+        jdbcUserDao.setBasicDataSource(dataSource());
         User user = new User(4L, "user4", "root", "user4@email.com", "Rich", "Brown",
                 new Date(System.currentTimeMillis()), new Role(4L, "Role"));
         jdbcUserDao.create(user);
-        assertEquals("should contain object that was insert", 4, jdbcUserDao.findAll().size());
+        assertEquals("should contain object that was insert", 4,
+                databaseTester.getConnection().createDataSet().getTable("User").getRowCount());
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateNull() throws IllegalAccessException, InstantiationException {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
+        jdbcUserDao.setBasicDataSource(dataSource());
         jdbcUserDao.create(null);
     }
 
     @Test
-    public void testUpdate() throws IllegalAccessException, InstantiationException {
+    public void testUpdate() throws Exception {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
+        jdbcUserDao.setBasicDataSource(dataSource());
         User user = new User(3L, "updatedUser", "newPass", "user3@email.com", "Bob", "Brown",
                 new Date(System.currentTimeMillis()), new Role(4L, "Role"));
         jdbcUserDao.update(user);
-        assertEquals("object should be updated ", jdbcUserDao.findAll().get(2).getLogin(), user.getLogin());
+        assertEquals("object should be updated ", databaseTester.getConnection().createDataSet().getTable("User")
+                .getValue(2, "login"), user.getLogin());
     }
 
     @Test(expected = NullPointerException.class)
     public void testUpdateNull() throws IllegalAccessException, InstantiationException {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
+        jdbcUserDao.setBasicDataSource(dataSource());
         jdbcUserDao.update(null);
     }
 
     @Test
-    public void testRemove() throws IllegalAccessException, InstantiationException {
+    public void testRemove() throws Exception {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
-        User user = jdbcUserDao.findAll().get(0);
+        jdbcUserDao.setBasicDataSource(dataSource());
+        User user = new User(2L, "user2", "root", "user1@email.com", "josh", "wayne", new Date(System.currentTimeMillis()),
+                new Role(1L, "user"));
         jdbcUserDao.remove(user);
-        assertEquals("should not contains deleted object", 2, jdbcUserDao.findAll().size());
+        assertEquals("should not contains deleted object", 2,
+                databaseTester.getConnection().createDataSet().getTable("User").getRowCount());
     }
 
     @Test(expected = NullPointerException.class)
     public void testRemoveNull() throws IllegalAccessException, InstantiationException {
         JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
+        jdbcUserDao.setBasicDataSource(dataSource());
         jdbcUserDao.remove(null);
     }
 
     @Test
-    public void testFindByLogin() throws IllegalAccessException, InstantiationException {
-        JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
-        User user = jdbcUserDao.findAll().get(1);
-        User secondUser = jdbcUserDao.findByLogin(user.getLogin());
-        assertEquals("object should be equals", user.getId(), secondUser.getId());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testFindByLoginNull() throws IllegalAccessException, InstantiationException {
-        JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
-        jdbcUserDao.findByLogin(null);
+    public void testFindByLogin() throws Exception {
+        JdbcUserDao jdbcUserDao = new JdbcUserDao(dataSource(), "test");
+        String userName = String.valueOf(databaseTester.getConnection().createDataSet().getTable("User")
+                .getValue(0, "login"));
+        User user = jdbcUserDao.findByLogin(userName);
+        assertNotNull("Should find user by login", user);
     }
 
     @Test
-    public void testFindByEmail() throws IllegalAccessException, InstantiationException {
-        JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
-        User user = jdbcUserDao.findAll().get(2);
-        User secondUser = jdbcUserDao.findByEmail(user.getEmail());
-        assertEquals("object should be equals", user.getId(), secondUser.getId());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testFindByEmailNull() throws IllegalAccessException, InstantiationException {
-        JdbcUserDao jdbcUserDao = JdbcUserDao.class.newInstance();
-        jdbcUserDao.setBasicDatSource(dataSource());
-        jdbcUserDao.findByEmail(null);
+    public void testFindByEmail() throws Exception {
+        JdbcUserDao jdbcUserDao = new JdbcUserDao(dataSource(), "test");
+        String userMail = String.valueOf(databaseTester.getConnection().createDataSet().getTable("User")
+                .getValue(0, "email"));
+        User user = jdbcUserDao.findByEmail(userMail);
+        assertNotNull("Should find user by email", user);
     }
 
     private BasicDataSource dataSource() {

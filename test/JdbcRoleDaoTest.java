@@ -17,13 +17,14 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotNull;
 
 public class JdbcRoleDaoTest {
 
     private static final String SQL_SCHEMA = "resources/schema.sql";
     private static final String SQL_DATASET = "resources/dataset.xml";
     private static final String SQL_DATABASE = "test";
+    private static IDatabaseTester databaseTester = null;
 
     @BeforeClass
     public static void createSchema() {
@@ -48,30 +49,27 @@ public class JdbcRoleDaoTest {
         return new FlatXmlDataSetBuilder().build(new File(SQL_DATASET));
     }
 
-    private void cleanlyInsert(IDataSet dataSet) {
-        ResourceBundle resourceBundle = ResourceBundle.getBundle(SQL_DATABASE);
+    private void cleanlyInsert(IDataSet dataSet) throws Exception {
+        ResourceBundle resourceBundle;
+        resourceBundle = ResourceBundle.getBundle(SQL_DATABASE);
         String url = resourceBundle.getString("jdbc.url");
         String user = resourceBundle.getString("jdbc.username");
         String password = resourceBundle.getString("jdbc.password");
         String driver = resourceBundle.getString("jdbc.driver-class-name");
-        IDatabaseTester databaseTester;
-        try {
-            databaseTester = new JdbcDatabaseTester(driver, url, user, password);
-            databaseTester.setSetUpOperation(DatabaseOperation.CLEAN_INSERT);
-            databaseTester.setDataSet(dataSet);
-            databaseTester.onSetup();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        databaseTester = new JdbcDatabaseTester(driver, url, user, password);
+        databaseTester.setSetUpOperation(DatabaseOperation.CLEAN_INSERT);
+        databaseTester.setDataSet(dataSet);
+        databaseTester.onSetup();
     }
 
     @Test
-    public void testCreate() throws IllegalAccessException, InstantiationException {
+    public void testCreate() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
         Role newRole = new Role(4L, "testRole");
         jdbcRoleDao.create(newRole);
-        assertEquals("Should contain object that was insert", 4, jdbcRoleDao.findAll().size());
+        assertEquals("Should contain object that was insert", 4, databaseTester.getConnection().createDataSet()
+                .getTable("Role").getRowCount());
     }
 
     @Test(expected = NullPointerException.class)
@@ -82,12 +80,13 @@ public class JdbcRoleDaoTest {
     }
 
     @Test
-    public void testUpdate() throws IllegalAccessException, InstantiationException {
+    public void testUpdate() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
         Role role = new Role(3L, "updatedRole");
         jdbcRoleDao.update(role);
-        assertEquals("object should be updated ", jdbcRoleDao.findAll().get(2).getName(), role.getName());
+        assertEquals("object should be updated ", databaseTester.getConnection().createDataSet().getTable("Role")
+                .getValue(2, "name"), role.getName());
     }
 
     @Test(expected = NullPointerException.class)
@@ -98,12 +97,13 @@ public class JdbcRoleDaoTest {
     }
 
     @Test
-    public void testRemove() throws IllegalAccessException, InstantiationException {
+    public void testRemove() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
-        Role role = jdbcRoleDao.findAll().get(0);
+        Role role = new Role(1L, "removeRole");
         jdbcRoleDao.remove(role);
-        assertEquals("size after remove should be 2", 2, jdbcRoleDao.findAll().size());
+        assertEquals("size after remove should be 2", 2, databaseTester.getConnection().createDataSet()
+                .getTable("Role").getRowCount());
     }
 
     @Test(expected = NullPointerException.class)
@@ -114,19 +114,13 @@ public class JdbcRoleDaoTest {
     }
 
     @Test
-    public void testFindByName() throws IllegalAccessException, InstantiationException {
+    public void testFindByName() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
-        Role role = jdbcRoleDao.findAll().get(1);
-        Role secondRole = jdbcRoleDao.findByName(role.getName());
-        assertSame("find not correct role", role.getId(), secondRole.getId());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testFindByNameNull() throws IllegalAccessException, InstantiationException {
-        JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
-        jdbcRoleDao.setBasicDataSource(dataSource());
-        jdbcRoleDao.findByName(null);
+        String roleName = String.valueOf(databaseTester.getConnection().createDataSet().
+                getTable("Role").getValue(2, "name"));
+        Role role = jdbcRoleDao.findByName(roleName);
+        assertNotNull("Should find role by name", role);
     }
 
     private BasicDataSource dataSource() {

@@ -2,38 +2,38 @@ package entity;
 
 public class Role {
 
-    private Long id;
-    private String Name;
+    private java.lang.Long id;
+    private String name;
 
-    public Role(Long id, String name) {
+    public Role(java.lang.Long id, String name) {
         this.id = id;
-        Name = name;
+        this.name = name;
     }
 
     public Role() {
     }
 
-    public Long getId() {
+    public java.lang.Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(java.lang.Long id) {
         this.id = id;
     }
 
     public String getName() {
-        return Name;
+        return name;
     }
 
     public void setName(String name) {
-        Name = name;
+        this.name = name;
     }
 
     @Override
     public String toString() {
         return "Role{" +
                 "id=" + id +
-                ", Name='" + Name + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 

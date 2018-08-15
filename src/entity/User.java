@@ -5,17 +5,17 @@ import java.sql.Date;
 
 public class User {
 
-    private Long id;
+    private java.lang.Long id;
     private String login;
     private String password;
     private String email;
     private String firstName;
     private String lastName;
     private Date birthday;
-    private Role role;
+    private Long roleId;
 
-    public User(Long id, String login, String password, String email, String firstName, String lastName,
-                Date birthday, Role role) {
+    public User(java.lang.Long id, String login, String password, String email, String firstName, String lastName,
+                Date birthday, Long roleId) {
         this.id = id;
         this.login = login;
         this.password = password;
@@ -23,17 +23,17 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthday = birthday;
-        this.role = role;
+        this.roleId = roleId;
     }
 
     public User() {
     }
 
-    public Long getId() {
+    public java.lang.Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(java.lang.Long id) {
         this.id = id;
     }
 
@@ -85,12 +85,12 @@ public class User {
         this.birthday = birthday;
     }
 
-    public Role getRole() {
-        return role;
+    public Long getRoleId() {
+        return roleId;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", birthday=" + birthday +
-                ", role=" + role +
+                ", roleId=" + roleId +
                 '}';
     }
 }

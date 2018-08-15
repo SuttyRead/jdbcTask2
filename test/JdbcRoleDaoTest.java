@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
@@ -22,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 public class JdbcRoleDaoTest {
 
     private static final String SQL_SCHEMA = "resources/schema.sql";
-    private static final String SQL_DATASET = "resources/dataset.xml";
+    private static final String SQL_DATASET = "dataset.xml";
     private static final String SQL_DATABASE = "test";
     private static IDatabaseTester databaseTester = null;
 
@@ -46,7 +45,7 @@ public class JdbcRoleDaoTest {
     }
 
     private IDataSet readDataSet() throws Exception {
-        return new FlatXmlDataSetBuilder().build(new File(SQL_DATASET));
+        return new FlatXmlDataSetBuilder().build(getClass().getResourceAsStream(SQL_DATASET));
     }
 
     private void cleanlyInsert(IDataSet dataSet) throws Exception {
@@ -70,6 +69,8 @@ public class JdbcRoleDaoTest {
         jdbcRoleDao.create(newRole);
         assertEquals("Should contain object that was insert", 4, databaseTester.getConnection().createDataSet()
                 .getTable("Role").getRowCount());
+        assertEquals("Role was added not correctly", newRole.getName(), databaseTester.getConnection().createDataSet()
+                .getTable("Role").getValue(3,"name"));
     }
 
     @Test(expected = NullPointerException.class)
@@ -83,10 +84,10 @@ public class JdbcRoleDaoTest {
     public void testUpdate() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
-        Role role = new Role(3L, "updatedRole");
-        jdbcRoleDao.update(role);
+        Role aRole = new Role(3L, "updatedRole");
+        jdbcRoleDao.update(aRole);
         assertEquals("object should be updated ", databaseTester.getConnection().createDataSet().getTable("Role")
-                .getValue(2, "name"), role.getName());
+                .getValue(2, "name"), aRole.getName());
     }
 
     @Test(expected = NullPointerException.class)
@@ -100,8 +101,8 @@ public class JdbcRoleDaoTest {
     public void testRemove() throws Exception {
         JdbcRoleDao jdbcRoleDao = JdbcRoleDao.class.newInstance();
         jdbcRoleDao.setBasicDataSource(dataSource());
-        Role role = new Role(1L, "removeRole");
-        jdbcRoleDao.remove(role);
+        Role aRole = new Role(1L, "removeRole");
+        jdbcRoleDao.remove(aRole);
         assertEquals("size after remove should be 2", 2, databaseTester.getConnection().createDataSet()
                 .getTable("Role").getRowCount());
     }
@@ -119,8 +120,8 @@ public class JdbcRoleDaoTest {
         jdbcRoleDao.setBasicDataSource(dataSource());
         String roleName = String.valueOf(databaseTester.getConnection().createDataSet().
                 getTable("Role").getValue(2, "name"));
-        Role role = jdbcRoleDao.findByName(roleName);
-        assertNotNull("Should find role by name", role);
+        Role aRole = jdbcRoleDao.findByName(roleName);
+        assertNotNull("Should find aRole by name", aRole);
     }
 
     private BasicDataSource dataSource() {

@@ -35,7 +35,7 @@ public abstract class AbstractJdbcDao {
         this.dataSource = dataSource;
     }
 
-    Connection createConnection() {
+    public Connection createConnection() {
         ResourceBundle resourceBundle = ResourceBundle.getBundle(dataSource);
         if (basicDataSource == null) {
             basicDataSource = new BasicDataSource();
@@ -45,7 +45,7 @@ public abstract class AbstractJdbcDao {
         }
         Connection connection;
         try {
-            Class.forName("org.h2.Driver").newInstance();
+            Class.forName(resourceBundle.getString("jdbc.driver-class-name")).newInstance();
             connection = basicDataSource.getConnection();
             connection.setAutoCommit(false);
             return connection;

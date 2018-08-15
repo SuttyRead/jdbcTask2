@@ -28,7 +28,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
     public void create(User user) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_INSERT_QUERY);
             statement.setLong(1, user.getId());
@@ -38,7 +37,7 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
             statement.setString(5, user.getFirstName());
             statement.setString(6, user.getLastName());
             statement.setDate(7, user.getBirthday());
-            statement.setLong(8, user.getRole().getId());
+            statement.setLong(8, user.getRoleId());
             statement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
@@ -47,8 +46,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -63,7 +60,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
     public void update(User user) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_UPDATE_QUERY);
             statement.setString(1, user.getLogin());
@@ -72,7 +68,7 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
             statement.setString(4, user.getFirstName());
             statement.setString(5, user.getLastName());
             statement.setDate(6, user.getBirthday());
-            statement.setLong(7, user.getRole().getId());
+            statement.setLong(7, user.getRoleId());
             statement.setLong(8, user.getId());
             statement.executeUpdate();
             connection.commit();
@@ -82,8 +78,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -98,7 +92,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
     public void remove(User user) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_DELETE_QUERY);
             statement.setLong(1, user.getId());
@@ -110,8 +103,6 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -127,12 +118,10 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
         List<User> users = new ArrayList<>();
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(SQL_SELECT_ALL_QUERY);
             User user;
-            JdbcRoleDao roleDao = new JdbcRoleDao();
             while (resultSet.next()) {
                 user = new User();
                 user.setId(resultSet.getLong("id"));
@@ -142,10 +131,10 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
                 user.setFirstName(resultSet.getString("firstname"));
                 user.setLastName(resultSet.getString("lastname"));
                 user.setBirthday(resultSet.getDate("birthday"));
-                user.setRole(roleDao.findById(resultSet.getLong("roleId")));
+                user.setRoleId(resultSet.getLong("roleId"));
                 users.add(user);
             }
-        } catch (SQLException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -170,13 +159,11 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
     private User findBySomething(String parameter, String query) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, parameter);
             ResultSet resultSet = statement.executeQuery();
             User user = null;
-            JdbcRoleDao roleDao = new JdbcRoleDao(this.getBasicDataSource(), this.getDataSource());
             if (resultSet.next()) {
                 user = new User();
                 user.setId(resultSet.getLong("id"));
@@ -186,10 +173,10 @@ public class JdbcUserDao extends AbstractJdbcDao implements UserDao {
                 user.setFirstName(resultSet.getString("firstname"));
                 user.setLastName(resultSet.getString("lastname"));
                 user.setBirthday(resultSet.getDate("birthday"));
-                user.setRole(roleDao.findById(resultSet.getLong("roleId")));
+                user.setRoleId(resultSet.getLong("roleId"));
             }
             return user;
-        } catch (SQLException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try {

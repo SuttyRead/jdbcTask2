@@ -1,103 +1,195 @@
 <project name="JdbcTask" basedir="." default="all">
 
     <!-- define names of directories -->
-    <property name="src" location="src"/>
     <property name="build" location="build"/>
     <property name="classes" location="${build}/classes"/>
     <property name="lib.dir" location="${basedir}/lib"/>
-
-    <property name="src.dir" location="."/>
-    <property name="src.java.dir" location="${src.dir}/src"/>
-    <property name="src.test.dir" location="${src.dir}/test"/>
-
+    <property name="src.java.dir" location="src"/>
+    <property name="src.test.dir" location="test"/>
     <property name="target.dir" location="build"/>
     <property name="target.classes.java.dir" location="${target.dir}/classes"/>
     <property name="target.classes.test.dir" location="${target.dir}/test/classes"/>
 
-    <property name="target.report.dir" location="${basedir}/report"/>
+    <property name="src.dir" location="${basedir}/src"/>
+    <property name="bin.dir" location="${basedir}/build"/>
+    <property name="conf.dir" value="${basedir}/resources"/>
+    <property name="report.dir" location="${basedir}/report"/>
+    <property name="report.findbugs.dir" location="${report.dir}/findbugs"/>
+    <property name="report.checkstyle.dir" location="${report.dir}/checkstyle"/>
+    <property name="report.pmd.dir" location="${report.dir}/pmd"/>
+    <property name="report.temp.dir" location="${report.dir}/temp"/>
+    <property name="instrumented.dir" location="${basedir}/instrumented"/>
+    <property name="cobertura.ser.file" location="${report.temp.dir}/cobertura.ser"/>
+    <property name="report.cobertura.dir" location="${report.dir}/cobertura"/>
+    <property name="report.junit.dir" location="${report.dir}/junit"/>
 
     <!-- define all targets -->
-    <target name="all" depends="jar">
-        <java classname="Main" classpath="${classes}" fork="true"/>
+    <target name="all" depends="testreport, cobertura, checkstyle, jar">
     </target>
 
     <target name="clean">
-        <delete dir="${build}"/>
-        <delete dir="${target.report.dir}"/>
+        <delete dir="${report.dir}"/>
+        <delete dir="${bin.dir}"/>
+        <delete dir="${basedir}/instrumented"/>
     </target>
 
-    <target name="jar" depends="report">
+    <target name="jar" depends="compile">
         <jar destfile="${build}/Main.jar" basedir="${classes}" excludes="*Test.class">
-            <manifest>
-                <attribute name="Main-Class" value="Main"/>
-            </manifest>
         </jar>
     </target>
+
+    <target name="compile.java">
+        <mkdir dir="${target.classes.java.dir}"/>
+        <javac destdir="${target.classes.java.dir}" includeantruntime="false" debug="true" classpathref="run.classpath">
+            <src path="${src.java.dir}"/>
+        </javac>
+    </target>
+
+    <target name="testcompile" depends="compile.java">
+        <mkdir dir="${target.classes.test.dir}"/>
+        <javac destdir="${target.classes.test.dir}" includeantruntime="false" debug="true" classpathref="run.classpath">
+            <src path="${src.test.dir}"/>
+        </javac>
+    </target>
+
+    <target name="compile" depends="compile.java, testcompile"/>
 
     <path id="run.classpath">
         <pathelement location="${target.classes.java.dir}"/>
         <pathelement location="${target.classes.test.dir}"/>
+        <pathelement location="${basedir}/resources"/>
+        <pathelement path="${basedir}/lib/junit-4.12.jar"/>
+        <pathelement path="${lib.dir}/hamcrest-core-1.3.jar"/>
         <fileset dir="${lib.dir}/">
             <include name="*.jar"/>
         </fileset>
     </path>
 
-    <target name="compile.java">
-        <mkdir dir="${target.classes.java.dir}"/>
-        <javac destdir="${target.classes.java.dir}" includeantruntime="false" classpathref="run.classpath">
-            <src path="${src.java.dir}"/>
-        </javac>
+    <target name="findbugs" depends="compile">
+        <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
+                 classpath="${lib.dir}/findbugs-3.0.1/lib/findbugs-ant.jar"/>
+        <mkdir dir="${report.findbugs.dir}"/>
+        <findbugs home="${lib.dir}/findbugs-3.0.1"
+                  workHard="true"
+                  output="xml:withMessages"
+                  outputFile="${report.findbugs.dir}/findbugs.xml"
+        >
+            <class location="${bin.dir}"/>
+            <auxclasspath>
+                <fileset file="${basedir}/lib/junit-4.12.jar"/>
+                <fileset file="${lib.dir}/dbunit-2.4.8.jar}"/>
+            </auxclasspath>
+        </findbugs>
     </target>
 
-    <target name="compile.test" depends="compile.java">
-        <mkdir dir="${target.classes.test.dir}"/>
-        <javac destdir="${target.classes.test.dir}" includeantruntime="false" classpathref="run.classpath">
-            <src path="${src.test.dir}"/>
-            <classpath>
-                <pathelement location="${target.classes.java.dir}"/>
-                <pathelement path="lib/junit-4.10.jar"/>
-            </classpath>
-        </javac>
+    <path id="checkstyle.classpath">
+        <fileset dir="${lib.dir}" includes="checkstyle-5.7-all.jar"/>
+    </path>
+
+    <target name="checkstyle" depends="report.findbugs, report.pmd">
+        <taskdef resource="checkstyletask.properties" classpathref="checkstyle.classpath"/>
+        <mkdir dir="${report.checkstyle.dir}"/>
+        <checkstyle config="resources/config.xml" failOnViolation="false" failureProperty="checkstyle.failure">
+            <formatter type="xml" tofile="${report.checkstyle.dir}/checkstyle_report.xml"/>
+            <fileset dir="src" includes="**/*.java"/>
+        </checkstyle>
+        <style in="${report.checkstyle.dir}/checkstyle_report.xml"
+               out="${report.checkstyle.dir}/checkstyle_report.html"
+               style="${conf.dir}/style.xsl"
+        />
     </target>
 
-    <target name="compile" depends="clean,compile.java,compile.test"/>
+    <path id="pmd2.classpath">
+        <pathelement location="${build}"/>
+        <fileset dir="${lib.dir}/">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+    <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask"
+             classpathref="pmd2.classpath"/>
+    <target name="report.pmd">
+        <mkdir dir="${report.pmd.dir}"/>
+        <pmd rulesetfiles="${conf.dir}/favourites.xml">
+            <formatter type="xml" toFile="${report.pmd.dir}/pmd_report.xml"/>
+            <fileset dir="${src.java.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+        <xslt in="${report.pmd.dir}/pmd_report.xml"
+              style="${conf.dir}/pmdstyle.xslt"
+              out="${report.pmd.dir}/pmd_report.html"
+        />
+    </target>
 
-    <target name="test" depends="compile">
-        <mkdir dir="${target.report.dir}"/>
+    <path id="cobertura.classpath">
+        <path refid="run.classpath"/>
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <taskdef classpathref="cobertura.classpath" resource="tasks.properties"/>
+    <target name="cobertura.instrument" depends="clean, compile">
+        <mkdir dir="${report.temp.dir}"/>
+        <cobertura-instrument todir="${instrumented.dir}" datafile="${cobertura.ser.file}">
+            <ignore regex="org.apache.log4j.*"/>
+            <fileset dir="${bin.dir}">
+                <include name="**/*.class"/>
+                <exclude name="**/*Test.class"/>
+            </fileset>
+        </cobertura-instrument>
+    </target>
 
-        <junit printsummary="yes" haltonerror="yes" haltonfailure="no">
-            <formatter type="plain" usefile="false"/>
+    <target name="test" depends="clean, compile, cobertura.instrument">
+        <mkdir dir="${report.cobertura.dir}"/>
+        <mkdir dir="${report.temp.dir}"/>
+        <junit printsummary="yes" fork="yes" haltonfailure="no">
+            <jvmarg value="-noverify"/>
+            <sysproperty key="net.sourceforge.cobertura.datafile"
+                         file="${cobertura.ser.file}"/>
+            <classpath location="${instrumented.dir}"/>
+            <classpath location="${bin.dir}"/>
+            <classpath location="${lib.dir}/junit-4.12.jar}"/>
+            <classpath location="${lib.dir}/dbunit-2.4.8.jar}"/>
+            <classpath refid="cobertura.classpath"/>
+
+            <formatter type="plain"/>
             <formatter type="xml"/>
-            <batchtest todir="${target.report.dir}">
+
+            <batchtest todir="${report.temp.dir}">
                 <fileset dir="${src.test.dir}">
                     <include name="**/*Test.java"/>
-                    <exclude name="**/Test*All.java"/>
                 </fileset>
             </batchtest>
-            <classpath>
-                <pathelement location="${basedir}/resources"/>
-                <pathelement location="${target.classes.java.dir}"/>
-                <pathelement location="${target.classes.test.dir}"/>
-                <pathelement path="lib/junit-4.12.jar"/>
-                <pathelement path="lib/dbunit-2.4.8.jar"/>
-                <pathelement path="lib/hamcrest-core-1.3.jar"/>
-                <pathelement path="lib/commons-dbcp2-2.0.1.jar"/>
-                <pathelement path="lib/commons-logging-1.1.3.jar"/>
-                <pathelement path="lib/commons-pool2-2.2.jar"/>
-                <pathelement path="lib/h2-1.4.197.jar"/>
-                <pathelement path="lib/slf4j-api-1.7.25.jar"/>
-            </classpath>
         </junit>
     </target>
 
-    <target name="report" depends="test">
-        <mkdir dir="${target.report.dir}/html"/>
-        <junitreport todir="${target.report.dir}">
-            <fileset dir="${target.report.dir}">
-                <include name="TEST-*.xml"/>
+    <target name="cobertura" depends="test">
+        <cobertura-report format="html"
+                          datafile="${cobertura.ser.file}"
+                          destdir="${report.cobertura.dir}"
+        >
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
             </fileset>
-            <report todir="${target.report.dir}/html"/>
+        </cobertura-report>
+    </target>
+
+    <target name="testreport" depends="test">
+        <delete dir="${report.junit.dir}"/>
+        <mkdir dir="${report.junit.dir}"/>
+        <junitreport todir="${report.junit.dir}">
+            <fileset dir="${report.temp.dir}">
+                <include name="*.xml"/>
+            </fileset>
+            <report format="frames" todir="${report.junit.dir}"/>
         </junitreport>
+    </target>
+
+    <target name="report.findbugs" depends="findbugs">
+        <xslt in="${report.findbugs.dir}/findbugs.xml"
+              style="${lib.dir}/findbugs-3.0.1/src/xsl/fancy.xsl"
+              out="${report.findbugs.dir}/findbugs-default.html"
+        />
     </target>
 
 </project>

@@ -24,14 +24,13 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
     }
 
     @Override
-    public void create(Role role) {
+    public void create(Role aRole) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_INSERT_QUERY);
-            statement.setLong(1, role.getId());
-            statement.setString(2, role.getName());
+            statement.setLong(1, aRole.getId());
+            statement.setString(2, aRole.getName());
             statement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
@@ -40,8 +39,6 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -54,14 +51,13 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
     }
 
     @Override
-    public void update(Role role) {
+    public void update(Role aRole) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_UPDATE_QUERY);
-            statement.setString(1, role.getName());
-            statement.setLong(2, role.getId());
+            statement.setString(1, aRole.getName());
+            statement.setLong(2, aRole.getId());
             statement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
@@ -70,8 +66,6 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -83,12 +77,11 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
     }
 
     @Override
-    public void remove(Role role) {
+    public void remove(Role aRole) {
         Connection connection = createConnection();
         try {
-            Class.forName("org.h2.Driver").newInstance();
             PreparedStatement st = connection.prepareStatement(SQL_DELETE_QUERY);
-            st.setLong(1, role.getId());
+            st.setLong(1, aRole.getId());
             st.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
@@ -97,8 +90,6 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
             } catch (SQLException e1) {
                 throw new RuntimeException(e1.getSQLState(), e);
             }
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -113,19 +104,18 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
     public Role findByName(String name) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_BY_NAME_QUERY);
             statement.setString(1, name);
             ResultSet resultSet = statement.executeQuery();
-            Role role = null;
+            Role aRole = null;
             if (resultSet.next()) {
-                role = new Role();
-                role.setId(resultSet.getLong("id"));
-                role.setName(resultSet.getString("name"));
+                aRole = new Role();
+                aRole.setId(resultSet.getLong("id"));
+                aRole.setName(resultSet.getString("name"));
             }
-            return role;
-        } catch (SQLException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+            return aRole;
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -136,22 +126,21 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
         }
     }
 
-    public Role findById(Long id) {
+    public Role findById(java.lang.Long id) {
         Connection connection = null;
         try {
-            Class.forName("org.h2.Driver").newInstance();
             connection = createConnection();
             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_BY_ID);
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
-            Role role = null;
+            Role aRole = null;
             if (resultSet.next()) {
-                role = new Role();
-                role.setId(resultSet.getLong("id"));
-                role.setName(resultSet.getString("name"));
+                aRole = new Role();
+                aRole.setId(resultSet.getLong("id"));
+                aRole.setName(resultSet.getString("name"));
             }
-            return role;
-        } catch (SQLException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+            return aRole;
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try {
@@ -163,21 +152,20 @@ public class JdbcRoleDao extends AbstractJdbcDao implements RoleDao {
     }
 
     public List<Role> findAll() {
-        List<Role> roles = new ArrayList<>();
+        List<Role> aRoles = new ArrayList<>();
         Connection connection = createConnection();
         try {
-            Class.forName("org.h2.Driver").newInstance();
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(SQL_SELECT_ALL_QUERY);
-            Role role;
+            Role aRole;
             while (resultSet.next()) {
-                role = new Role();
-                role.setId(resultSet.getLong("id"));
-                role.setName(resultSet.getString("name"));
-                roles.add(role);
+                aRole = new Role();
+                aRole.setId(resultSet.getLong("id"));
+                aRole.setName(resultSet.getString("name"));
+                aRoles.add(aRole);
             }
-            return roles;
-        } catch (SQLException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+            return aRoles;
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             try {

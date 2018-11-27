@@ -1,24 +1,23 @@
-<project name="JdbcTask" basedir="." default="all">
+<project name="Jdbc" basedir="." default="all">
 
-    <!-- define names of directories -->
     <property name="build" location="build"/>
     <property name="classes" location="${build}/classes"/>
-    <property name="lib.dir" location="${basedir}/lib"/>
-    <property name="src.java.dir" location="src"/>
-    <property name="src.test.dir" location="test"/>
+    <property name="lib.dir" location="lib"/>
+    <property name="src.java.dir" location="src/main/java"/>
+    <property name="src.test.dir" location="src/test/java"/>
     <property name="target.dir" location="build"/>
     <property name="target.classes.java.dir" location="${target.dir}/classes"/>
     <property name="target.classes.test.dir" location="${target.dir}/test/classes"/>
 
-    <property name="src.dir" location="${basedir}/src"/>
+    <property name="src.dir" location="src/main/java"/>
     <property name="bin.dir" location="${basedir}/build"/>
-    <property name="conf.dir" value="${basedir}/resources"/>
-    <property name="report.dir" location="${basedir}/report"/>
+    <property name="conf.dir" value="resources"/>
+    <property name="report.dir" location="${build}/report"/>
     <property name="report.findbugs.dir" location="${report.dir}/findbugs"/>
     <property name="report.checkstyle.dir" location="${report.dir}/checkstyle"/>
     <property name="report.pmd.dir" location="${report.dir}/pmd"/>
     <property name="report.temp.dir" location="${report.dir}/temp"/>
-    <property name="instrumented.dir" location="${basedir}/instrumented"/>
+    <property name="instrumented.dir" location="${build}/instrumented"/>
     <property name="cobertura.ser.file" location="${report.temp.dir}/cobertura.ser"/>
     <property name="report.cobertura.dir" location="${report.dir}/cobertura"/>
     <property name="report.junit.dir" location="${report.dir}/junit"/>

@@ -1,6 +1,7 @@
-package dao;
+package com.ua.sutty.jdbc.repository;
 
-import entity.User;
+
+import com.ua.sutty.jdbc.domain.User;
 
 import java.util.List;
 

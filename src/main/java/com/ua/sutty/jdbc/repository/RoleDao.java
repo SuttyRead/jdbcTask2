@@ -1,6 +1,7 @@
-package dao;
+package com.ua.sutty.jdbc.repository;
 
-import entity.Role;
+
+import com.ua.sutty.jdbc.domain.Role;
 
 public interface RoleDao {
 

@@ -1,9 +1,8 @@
-package dao;
+package com.ua.sutty.jdbc.repository;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ResourceBundle;
 
 public abstract class AbstractJdbcDao {
@@ -45,14 +44,57 @@ public abstract class AbstractJdbcDao {
         }
         Connection connection;
         try {
-            Class.forName(resourceBundle.getString("jdbc.driver-class-name")).newInstance();
+            Class.forName(resourceBundle.getString("jdbc.driver")).newInstance();
+            System.out.println(1);
             connection = basicDataSource.getConnection();
+            System.out.println(2);
             connection.setAutoCommit(false);
+            System.out.println(3);
             return connection;
         } catch (SQLException e) {
             throw new RuntimeException(e.getSQLState());
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void closeConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void closePreparedStatement(PreparedStatement preparedStatement) {
+        if (preparedStatement != null) {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void closeStatement(Statement statement) {
+        if (statement != null) {
+            try {
+                statement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void closeResultSet(ResultSet resultSet) {
+        if (resultSet != null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

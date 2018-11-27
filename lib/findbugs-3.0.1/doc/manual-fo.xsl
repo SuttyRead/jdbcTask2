@@ -4,7 +4,7 @@
                 xmlns="http://www.w3.org/TR/xhtml1/transitional"
                 exclude-result-prefixes="#default">
 
-<!-- build.xml will substitute the real path to fo/docbook.xsl here. -->
+<!-- build3.xml will substitute the real path to fo/docbook.xsl here. -->
 <xsl:import href="/Users/pugh/tools/docbook-xsl-1.78.1/fo/docbook.xsl"/>
 
 <!-- Enumerate sections. -->

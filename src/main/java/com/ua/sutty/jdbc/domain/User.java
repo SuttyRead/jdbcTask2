@@ -1,11 +1,20 @@
-package entity;
+package com.ua.sutty.jdbc.domain;
 
 
 import java.sql.Date;
 
 public class User {
 
-    private java.lang.Long id;
+    public static final String ID = "id";
+    public static final String LOGIN = "login";
+    public static final String PASSWORD = "password";
+    public static final String EMAIL = "email";
+    public static final String FIRST_NAME = "firstname";
+    public static final String LAST_NAME = "lastname";
+    public static final String BIRTHDAY = "birthday";
+    public static final String ROLE_ID = "roleId";
+
+    private Long id;
     private String login;
     private String password;
     private String email;
@@ -14,8 +23,20 @@ public class User {
     private Date birthday;
     private Long roleId;
 
-    public User(java.lang.Long id, String login, String password, String email, String firstName, String lastName,
-                Date birthday, Long roleId) {
+    public User() {
+    }
+
+    public User(String login, String password, String email, String firstName, String lastName, Date birthday, Long roleId) {
+        this.login = login;
+        this.password = password;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.birthday = birthday;
+        this.roleId = roleId;
+    }
+
+    public User(Long id, String login, String password, String email, String firstName, String lastName, Date birthday, Long roleId) {
         this.id = id;
         this.login = login;
         this.password = password;
@@ -26,14 +47,11 @@ public class User {
         this.roleId = roleId;
     }
 
-    public User() {
-    }
-
-    public java.lang.Long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(java.lang.Long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -92,18 +110,5 @@ public class User {
     public void setRoleId(Long roleId) {
         this.roleId = roleId;
     }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", login='" + login + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", birthday=" + birthday +
-                ", roleId=" + roleId +
-                '}';
-    }
 }
+
